@@ -1,0 +1,34 @@
+SQL Version
+SELECT    *,  
+  (CAST("Balance" AS REAL) + CAST("Credit" AS REAL)) AS Balance_credit,   (CAST("Floating_PL" AS REAL) / CAST("Balance" AS REAL)) * 100 AS Percentage_by_Balance,  
+  (CAST("Floating_PL" AS REAL) / (CAST("Balance" AS REAL) + CAST("Credit" AS REAL))) * 100 AS Percentage_by_Balance_Credit FROM   
+  "Accounts"WHERE   
+  CAST("Floating_PL" AS REAL) IS NOT NULL    AND CAST("Floating_PL" AS REAL) != 0; 
+  
+Python Version
+import pandas as pd
+
+# Membaca data file dengan format CSV
+file = r"C:\Users\LENOVO\Downloads\Accounts.csv"
+df = pd.read_csv(file, encoding='utf-16', sep='\t')
+
+# Menghapus data NaN di kolom 'Floating_PL'
+df = df.dropna(subset=['Floating PL'])
+
+# Menghapus baris yang memiliki nilai 0 di kolom 'Floating_PL'
+df = df[df['Floating PL'] != 0]
+
+# Menghitung Balance_credit
+df['Balance_credit'] = df['Balance']+df['Credit']
+
+# Menghitung Percentage_by_Balance
+df['Percentage_by_Balance'] = ((df['Floating PL']/df['Balance'])*100)
+
+# Menghitung Percentage_by_Balance_Credit
+df['Percentage_by_Balance_Credit'] = (df['Floating PL'] / (df['Balance'] + df['Credit'])) * 100
+
+# Menampilkan preview data
+print(df)
+
+# Simpan hasil ke dalam file CSV
+df.to_csv("Mena update.csv", sep=";", index=False)
