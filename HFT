@@ -1,0 +1,61 @@
+# -*- coding: utf-8 -*-
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Membaca data file dengan format Excel
+file = r"C:\Users\LENOVO\Downloads\Deals.xlsx"
+df = pd.read_excel(file)
+
+# Periksa tipe data kolom
+print(df.dtypes)
+
+# Konversi ke format datetime
+df['Time'] = pd.to_datetime(df['Time'])
+
+# Jika kolom 'Balance' dan 'Profit' masih object (string), bersihkan format angka
+if df['Balance'].dtype == 'object':
+    df['Balance'] = pd.to_numeric(df['Balance'].str.replace('[ ,]', '', regex=True))
+
+if df['Profit'].dtype == 'object':
+    df['Profit'] = pd.to_numeric(df['Profit'].str.replace('[ ,]', '', regex=True))
+
+# Mengisi data NaN di kolom 'Profit' dengan metode forward fill
+df['Profit'] = df['Profit'].fillna(method='ffill')  
+
+# Isi NaN pada 'Volume' dengan 0
+df['Volume'] = df['Volume'].fillna(0)
+
+# Menambahkan kolom baru 'Equity' dengan menjumlahkan nilai sebelumnya
+#df["Equity"] = round(df["Balance"].shift(1).fillna(0))
+df["Equity"] = round(df["Balance"] + df["Profit"], 2)  
+
+# Menampilkan 10 data terawal & terakhir
+print(df.head(30))
+#print(df.tail(10))
+#print(df)
+
+# Simpan hasil ke dalam file Excel
+#df.to_excel("HFT.xlsx", index=False)
+
+# Membuat scatterplot dari kolom 'Volume' terhadap waktu
+plt.figure(figsize=(16, 8))  # Untuk mengubah ukuran grafik
+plt.scatter(df['Time'], df['Volume'], color='purple', alpha=0.6)
+
+# Memberi label dan judul
+plt.xlabel('Time')
+plt.ylabel('Volume (Lot)')
+plt.title('Scatterplot of Volume Over Time')
+plt.grid(True)
+
+# Membuat plot grafik Balance dan Equity
+plt.figure(figsize=(12, 6))
+plt.plot(df['Time'], df['Balance'], label='Balance', color='blue')
+#plt.plot(df['Time'], df['Equity'], label='Equity', color='green')
+plt.xlabel('Time')
+plt.ylabel('Value')
+plt.title('Balance and Equity Over Time')
+plt.legend()
+plt.grid(True)
+
+# Memunculkan plot
+plt.show()
