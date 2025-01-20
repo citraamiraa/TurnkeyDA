@@ -1,0 +1,44 @@
+import pandas as pd
+
+# Membaca data positions dari history trades dengan format Excel
+#file = r"C:\Users\LENOVO\Downloads\ReportHistory-95435 Farel.xlsx"
+#file = r"C:\Users\LENOVO\Downloads\ReportHistory-96225 Rehab.xlsx"
+file = r"C:\Users\LENOVO\Downloads\ReportHistory-95552 Mohammed.xlsx"
+df = pd.read_excel(file)
+
+# Menghitung jumlah trades dalam data history
+total_trades = len(df)
+
+# Menambah kolom PnL untuk menghitung total profit dari history trades
+PnL = df["Profit"].sum()
+
+# Membulatkan PnL jadi 2 angka di belakang koma
+PnL = round(PnL, 2)
+
+# Konversi kolom Time menjadi tipe datetime
+df["Entry Time"] = pd.to_datetime(df["Entry Time"])
+df["Close Time"] = pd.to_datetime(df["Close Time"])
+
+# Menambah kolom timerange untuk melihat waktu transaksi
+df["Timerange"] = df["Close Time"] - df["Entry Time"]
+
+# Filter dan hitung Persentase transaksi open close di bawah 2 menit
+# Filter transaksi dengan Timerange di bawah 2 menit
+df_filter = df[df["Timerange"] < pd.Timedelta(minutes=2)]
+
+# Menghitung jumlah transaksi di bawah 2 menit
+trades_filter = len(df_filter)
+
+# Menghitung persentase transaksi di bawah 2 menit
+percentage = (trades_filter / total_trades) * 100
+
+# Membulatkan persentase jadi 2 angka di belakang koma
+percentage = round(percentage, 2)
+
+# Menampilkan preview data
+#print(df)
+print(df_filter)
+#print (PnL)
+#print(total_trades)
+#print (trades_filter)
+#print (percentage)
