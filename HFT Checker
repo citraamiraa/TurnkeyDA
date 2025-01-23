@@ -1,3 +1,5 @@
+Goals : checking apakah account dengan ID tertentu melakukan trading dengan sistem HFT (membuka posisi dalam waktu dekat(ms) menggunakan robot )
+
 import pandas as pd
 
 # Membaca data positions dari history trades dengan format Excel
