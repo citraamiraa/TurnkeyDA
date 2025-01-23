@@ -1,13 +1,22 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Jan 20 12:23:48 2025
+
+@author: LENOVO
+"""
+
 import pandas as pd
 
 # Membaca data positions dari history trades dengan format Excel
-#file = r"C:\Users\LENOVO\Downloads\ReportHistory-95435 Farel.xlsx"
-#file = r"C:\Users\LENOVO\Downloads\ReportHistory-96225 Rehab.xlsx"
-file = r"C:\Users\LENOVO\Downloads\ReportHistory-95552 Mohammed.xlsx"
+file = r"C:\Users\LENOVO\Downloads\ReportHistory-95552 Alkhalidi.xlsx"
 df = pd.read_excel(file)
 
 # Menghitung jumlah trades dalam data history
 total_trades = len(df)
+
+# Mengelompokkan data berdasarkan pasangan mata uang (pair) dan menghitung distribusinya
+# Asumsikan kolom 'Symbol' berisi nama pair
+pair_distribution = df.groupby('Symbol').size().reset_index(name='Trade Count')
 
 # Menambah kolom PnL untuk menghitung total profit dari history trades
 PnL = df["Profit"].sum()
@@ -22,23 +31,34 @@ df["Close Time"] = pd.to_datetime(df["Close Time"])
 # Menambah kolom timerange untuk melihat waktu transaksi
 df["Timerange"] = df["Close Time"] - df["Entry Time"]
 
+# Filter dan hitung transaksi yang tidak memiliki SL
+df_no_sl = df[df["SL"].isna()]  # Filter trades dengan kolom SL kosong
+no_sl_trades = len(df_no_sl)  # Jumlah trades tanpa SL
+
+# Filter dan hitung transaksi yang tidak memiliki TP
+df_no_tp = df[df["TP"].isna()]  # Filter trades dengan kolom TP kosong
+no_tp_trades = len(df_no_tp)  # Jumlah trades tanpa TP
+
+# Menghitung persentase trades tanpa SL
+percentage_no_sl = (no_sl_trades / total_trades) * 100
+percentage_no_sl = round(percentage_no_sl, 2)  # Membulatkan 2 angka di belakang koma
+
+# Menghitung persentase trades tanpa TP
+percentage_no_tp = (no_tp_trades / total_trades) * 100
+percentage_no_tp = round(percentage_no_tp, 2)  # Membulatkan 2 angka di belakang koma
+
 # Filter dan hitung Persentase transaksi open close di bawah 2 menit
-# Filter transaksi dengan Timerange di bawah 2 menit
 df_filter = df[df["Timerange"] < pd.Timedelta(minutes=2)]
-
-# Menghitung jumlah transaksi di bawah 2 menit
 trades_filter = len(df_filter)
-
-# Menghitung persentase transaksi di bawah 2 menit
 percentage = (trades_filter / total_trades) * 100
-
-# Membulatkan persentase jadi 2 angka di belakang koma
 percentage = round(percentage, 2)
 
-# Menampilkan preview data
-#print(df)
-print(df_filter)
-#print (PnL)
-#print(total_trades)
-#print (trades_filter)
-#print (percentage)
+# Menampilkan hasil
+print("Total Profit and Loss (PnL):", PnL)
+print("Total Trades:", total_trades)
+print("Trades < 2 minutes:", trades_filter)
+print("Percentage of Trades < 2 minutes:", percentage)
+print("Trades without SL:", no_sl_trades)
+print("Percentage of Trades without SL:", percentage_no_sl)
+print("Trades without TP:", no_tp_trades)
+print("Percentage of Trades without TP:", percentage_no_tp)
