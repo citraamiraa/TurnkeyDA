@@ -1,0 +1,28 @@
+Goals : checking apakah IP tertentu digunakan paada beberapa ID, jika iya maka terindikasi red flag account
+
+import pandas as pd
+
+# Membaca file dengan format CSV
+file = r"C:\Users\LENOVO\Downloads\Profit Account - Database .csv"
+df = pd.read_csv(file, encoding='utf-8', sep=',')
+
+#print(df)
+
+# Normalize the IP column: Split IP addresses and create a row for each IP
+df = df.assign(IP=df['IP'].str.split(',')).explode('IP').reset_index(drop=True)
+
+# Check for duplicate IPs with different Login IDs
+duplicate_ips = df[df.duplicated('IP', keep=False)]
+
+# Group by IP to see all associated Login IDs
+df = duplicate_ips.groupby('IP')['Login'].apply(set).reset_index()
+
+# Filter only IPs with more than 1 unique Login
+df = df[df['Login'].apply(len) > 1]
+
+# Display result
+print(df)
+
+Output example:
+               IP                  Login
+0  162.55.131.XXX  {951XX, 950XX, 947XX}
