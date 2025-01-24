@@ -3,7 +3,7 @@ Goals : checking apakah account dengan ID tertentu melakukan trading dengan sist
 import pandas as pd
 
 # Membaca data positions dari history trades dengan format Excel
-file = r"C:\Users\LENOVO\Downloads\ReportHistory-95552 Alkhalidi.xlsx"
+file = r"C:\Users\LENOVO\Downloads\ReportHistory-96506.xlsx"
 df = pd.read_excel(file)
 
 # Menghitung jumlah trades dalam data history
@@ -51,9 +51,12 @@ percentage = round(percentage, 2)
 # Menampilkan hasil
 print("Total Profit and Loss (PnL):", PnL)
 print("Total Trades:", total_trades)
-print("Trades < 2 minutes:", trades_filter)
-print("Percentage of Trades < 2 minutes:", percentage)
+
+print("Potential HFT")
+print("Trades close < 2 minutes:", trades_filter)
+print("%Trades < 2 minutes:", percentage)
+
 print("Trades without SL:", no_sl_trades)
-print("Percentage of Trades without SL:", percentage_no_sl)
+print("%Trades without SL:", percentage_no_sl)
 print("Trades without TP:", no_tp_trades)
-print("Percentage of Trades without TP:", percentage_no_tp)
+print("%rades without TP:", percentage_no_tp)
