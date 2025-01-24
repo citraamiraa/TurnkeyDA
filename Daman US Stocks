@@ -1,0 +1,36 @@
+Goals :  Gather specification data from broker Daman (US Stocks)
+
+import MetaTrader5 as mt5
+
+# Credential Daman Securities MT5 account
+login =  
+password = "       "  # invest password
+server = "DamanSecurities-Live" 
+
+# Get all symbols available on the platform
+symbols = mt5.symbols_get()
+
+# Filter only CFD US Stock symbols (symbol using ".US")
+cfd_us_stocks = [symbol for symbol in symbols if ".US" in symbol.name]
+
+# Extract specifications for each CFD US Stock symbol
+df = []
+for symbol in cfd_us_stocks:
+    info = mt5.symbol_info(symbol.name)
+    if info is not None:
+        df.append({
+            "Symbol": info.name,
+            "Description": info.description,
+            "Digits": info.digits,
+            "Point Size": info.point,
+            "Contract Size": info.trade_contract_size,
+            "Spread": "floating",
+            "Min Volume": info.volume_min,
+            "Max Volume": info.volume_max,
+            "Swap Long": info.swap_long,
+            "Swap Short": info.swap_short,
+            "Commission": "0.004% in USD per lot",
+        })
+
+# Save to a CSV file
+df.to_csv("Daman CFD US Stocks.csv", sep=";", index=False)
