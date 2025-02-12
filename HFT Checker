@@ -1,62 +1,83 @@
 Goals : checking apakah account dengan ID tertentu melakukan trading dengan sistem HFT (membuka posisi dalam waktu dekat(ms) menggunakan robot )
 
 import pandas as pd
+import numpy as np
 
 # Membaca data positions dari history trades dengan format Excel
-file = r"C:\Users\LENOVO\Downloads\ReportHistory-96506.xlsx"
-df = pd.read_excel(file)
+file = r"C:\Users\LENOVO\Downloads\ReportHistory-96953.xlsx"
 
-# Menghitung jumlah trades dalam data history
-total_trades = len(df)
+# Menentukan nama sheet yang akan digunakan.
+sheet_name = 'Sheet1'
 
-# Mengelompokkan data berdasarkan pasangan mata uang (pair) dan menghitung distribusinya
-# Asumsikan kolom 'Symbol' berisi nama pair
-pair_distribution = df.groupby('Symbol').size().reset_index(name='Trade Count')
+# Membaca seluruh isi file Excel tanpa header
+df = pd.read_excel(file, sheet_name=sheet_name, header=None)
 
-# Menambah kolom PnL untuk menghitung total profit dari history trades
-PnL = df["Profit"].sum()
+# Mencari baris pertama dari kata dan menambah 1 untuk memulai dari baris berikutnya.
+positions_start = df[df[0] == 'Positions'].index[0] + 1
+orders_start = df[df[0] == 'Orders'].index[0] + 1
 
-# Membulatkan PnL jadi 2 angka di belakang koma
-PnL = round(PnL, 2)
+# Temukan baris akhir untuk tabel positions
+positions_end = orders_start - 1
 
-# Konversi kolom Time menjadi tipe datetime
-df["Entry Time"] = pd.to_datetime(df["Entry Time"])
-df["Close Time"] = pd.to_datetime(df["Close Time"])
+# Ekstrak tabel Positions
+# Mengambil bagian tabel Positions dari df berdasarkan indeks yang telah ditentukan.
+positions_df = df.iloc[positions_start:positions_end]
+# Menggunakan baris pertama sebagai header
+positions_df.columns = positions_df.iloc[0]
+# Menggunakan baris pertama sebagai header
+positions_df = positions_df[1:]
+# Mengatur ulang indeks agar rapi
+positions_df.reset_index(drop=True, inplace=True)
 
-# Menambah kolom timerange untuk melihat waktu transaksi
-df["Timerange"] = df["Close Time"] - df["Entry Time"]
+# Hapus kolom yang seluruhnya kosong
+positions_df = positions_df.dropna(axis=1, how='all')
 
-# Filter dan hitung transaksi yang tidak memiliki SL
-df_no_sl = df[df["SL"].isna()]  # Filter trades dengan kolom SL kosong
-no_sl_trades = len(df_no_sl)  # Jumlah trades tanpa SL
+# Ganti nama kolom agar tidak ada duplikasi
+positions_df.columns = [
+    'Open Time', 'Position', 'Symbol', 'Type', 'Volume', 'Open Price',
+    'S / L', 'T / P', 'Close Time', 'Close Price', 'Commission', 'Swap', 'Profit'
+]
 
-# Filter dan hitung transaksi yang tidak memiliki TP
-df_no_tp = df[df["TP"].isna()]  # Filter trades dengan kolom TP kosong
-no_tp_trades = len(df_no_tp)  # Jumlah trades tanpa TP
+# Pastikan kolom Waktu dalam format datetime untuk memudahkan perhitungan selisih waktu.
+# Jika ada nilai yang tidak bisa dikonversi, diubah menjadi NaT (Not a Time)
+positions_df['Open Time'] = pd.to_datetime(positions_df['Open Time'], errors='coerce')
+positions_df['Close Time'] = pd.to_datetime(positions_df['Close Time'], errors='coerce')
 
-# Menghitung persentase trades tanpa SL
-percentage_no_sl = (no_sl_trades / total_trades) * 100
-percentage_no_sl = round(percentage_no_sl, 2)  # Membulatkan 2 angka di belakang koma
+# Menghitung durasi transaksi
+positions_df["Timerange"] = positions_df["Close Time"] - positions_df["Open Time"]
 
-# Menghitung persentase trades tanpa TP
-percentage_no_tp = (no_tp_trades / total_trades) * 100
-percentage_no_tp = round(percentage_no_tp, 2)  # Membulatkan 2 angka di belakang koma
+# Menentukan jumlah total transaksi yang ada di dataset
+total_trades = len(positions_df)
 
-# Filter dan hitung Persentase transaksi open close di bawah 2 menit
-df_filter = df[df["Timerange"] < pd.Timedelta(minutes=2)]
+# Ganti string kosong dengan NaN
+positions_df['S / L'] = positions_df['S / L'].replace('', np.nan)
+positions_df['T / P'] = positions_df['T / P'].replace('', np.nan)
+
+# Sekarang hitung lagi
+df_no_sl = positions_df[positions_df["S / L"].isna()]
+no_sl_trades = len(df_no_sl)
+
+df_no_tp = positions_df[positions_df["T / P"].isna()]
+no_tp_trades = len(df_no_tp)
+
+# Memfilter transaksi yang durasinya kurang dari 2 menit
+df_filter = positions_df[positions_df["Timerange"] < pd.Timedelta(minutes=2)]
 trades_filter = len(df_filter)
-percentage = (trades_filter / total_trades) * 100
-percentage = round(percentage, 2)
 
-# Menampilkan hasil
+# Menghitung persentase transaksi tanpa SL dan TP
+percentage_no_sl = round((no_sl_trades / total_trades) * 100, 2)
+percentage_no_tp = round((no_tp_trades / total_trades) * 100, 2)
+percentage = round((trades_filter / total_trades) * 100, 2)
+
+# Menghitung Total Profit and Loss
+PnL = round(positions_df["Profit"].sum(), 2)
+
+# Menampilkan Hasil
 print("Total Profit and Loss (PnL):", PnL)
 print("Total Trades:", total_trades)
-
-print("Potential HFT")
 print("Trades close < 2 minutes:", trades_filter)
 print("%Trades < 2 minutes:", percentage)
-
 print("Trades without SL:", no_sl_trades)
 print("%Trades without SL:", percentage_no_sl)
 print("Trades without TP:", no_tp_trades)
-print("%rades without TP:", percentage_no_tp)
+print("%Trades without TP:", percentage_no_tp)
